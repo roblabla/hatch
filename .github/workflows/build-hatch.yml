@@ -204,10 +204,7 @@ jobs:
 
   windows-packaging:
     name: Build Windows installers
-    if: >-
-      github.event_name == 'push'
-      &&
-      (github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags'))
+    if: github.event.pull_request.head.repo.full_name == github.repository
     needs: binaries
     runs-on: windows-2022
 
@@ -277,10 +274,7 @@ jobs:
 
   macos-packaging:
     name: Build macOS installer and sign/notarize artifacts
-    if: >-
-      github.event_name == 'push'
-      &&
-      (github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags'))
+    if: github.event.pull_request.head.repo.full_name == github.repository
     needs: binaries
     runs-on: macos-12
 
@@ -402,9 +396,17 @@ jobs:
         echo "app-name=$app_name-${{ env.VERSION }}.dmg" >> "$GITHUB_OUTPUT"
         echo "dmg-file=$app_name-${{ env.VERSION }}.dmg" >> "$GITHUB_OUTPUT"
 
+    - name: See app bundle
+      run: |-
+        set -x
+        bundle="staged/${{ steps.stage.outputs.app-bundle }}"
+        ls -la "$bundle"
+        ls -la "$bundle/Contents"
+        ls -la "$bundle/Contents/MacOS"
+
     - name: Sign app bundle
       run: >-
-        rcodesign sign -vv
+        rcodesign sign -vvv
         --pem-source /tmp/certificate.pem
         --pem-source /tmp/private-key.pem
         "staged/${{ steps.stage.outputs.app-bundle }}"
