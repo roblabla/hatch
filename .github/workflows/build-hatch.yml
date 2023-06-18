@@ -405,13 +405,17 @@ jobs:
         ls -la "$bundle/Contents/MacOS"
 
     - name: Sign app bundle
+      id: sign_bundle
+      continue-on-error: true
       run: >-
         rcodesign sign -vvv
         --pem-source /tmp/certificate.pem
         --pem-source /tmp/private-key.pem
         "staged/${{ steps.stage.outputs.app-bundle }}"
         "signed/${{ steps.stage.outputs.app-bundle }}"
-
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: steps.sign_bundle.outcome != 'success'
     - name: Create DMG
       run: >-
         create-dmg
